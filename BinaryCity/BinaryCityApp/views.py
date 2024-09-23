@@ -90,36 +90,16 @@ def contact_page_view(request):
         clients = Client.objects.all()
 
         # Create a table instance with the fetched clients
-        clientTable = ClientTable(clients)
+        clientTable = ClientTableContactPage(clients)
 
-         # Fetch all clients from the database
+        # Fetch all clients from the database
         contacts = Contact.objects.all()
 
 
-        # Custom integer values corresponding to each client
-        custom_integers = [6, 5, 65, 5, 65, 32, 32, 112, 321, 254, 23, 515]
-
-        # Ensure the length of custom_integers matches the number of clients
-        if len(custom_integers) < len(contacts):
-            # Extend custom_integers if it's shorter than the clients list
-            custom_integers += [0] * (len(clients) - len(custom_integers))
-
-        # Add custom integer to each client and create a new list of data
-        contacts_data_with_int = []
-        for index, contact in enumerate(contacts):
-            # Adding custom integer and client data to the new list
-            contacts_data_with_int.append({
-                'name': contact.name,
-                'client_code': contact.client_code,
-                'num_clients_int': custom_integers[index]  # Custom integer per client
-            })
-
-        
-
         # Create a table instance with the modified clients data
-        clientTable = ClientTable(client_data_with_int)
+        contactTablePage = ContactTablePage(contacts)
 
-        return render(request, 'contacts_page.html', {'form': form, 'clientTableView': clientTable})  # Pass the form to the template
+        return render(request, 'contacts_page.html', {'form': form, 'clientTableView': clientTable, 'contactTable': contactTablePage})  # Pass the form to the template
 
 
 def success_contact_added(request):
@@ -143,8 +123,32 @@ def success_contact_linked(request,client_code):
 
         return redirect('client_view')
     
+    contacts = Contact.objects.filter(client__client_code = 'NON')
 
-    print("Linking company", client_code)
+    return render(request, 'client_linking.html', {
+        'contacts': contacts,
+    })
+
+
+
+def success_client_link(request,contact_code):
+    if request.method == 'POST':
+        #selected_client = request.POST.getList('selected_contacts')
+        # Logic to link the selected contacts to the client
+        # Assuming contact_id is provided
+        #contact = get_object_or_404(Contact, id=contact_code)
+
+        # Assuming client_code is the new value provided and exists in the Client model
+        #client = get_object_or_404(Client, client_code=selected_client)
+
+        # Update the contact's client reference
+        #contact.client = client
+        #contact.save()
+
+        return redirect('client_view')
+    
+
+    print("Linking contact", contact_code)
 
 
 
@@ -158,6 +162,8 @@ def success_contact_linked(request,client_code):
     return render(request, 'client_linking.html', {
         'contacts': contacts,
     })
+
+
 
 
 def success_contact_unlinked(request, contact_code):

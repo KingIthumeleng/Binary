@@ -93,9 +93,9 @@
     <div>
 
         <h3>Contact(s) List</h3>
-        {% if contactTableView %}
+        {% if contactTable %}
             {% load render_table from django_tables2 %}
-            {% render_table contactTableView %}
+            {% render_table contactTable %}
         {% else %}
             <p>No contacts found.</p>
         {% endif %}
