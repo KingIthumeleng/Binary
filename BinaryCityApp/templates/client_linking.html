@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Linking</title>
+    
+    
+</head>
+<body>
+
+    <h2>Select contacts to link</h2>
+
+
+    <form method="POST">  <!-- Adjust the URL name -->
+        {% csrf_token %}
+        <ul>
+            {% for contact in contacts %}
+                <li>
+                    <label>
+                        <input type="checkbox" name="selected_contacts" value="{{ contact.id }}">  <!-- Change 'contact.id' as needed -->
+                        {{ contact.contact_name }}  <!-- Adjust as per your contact model -->
+                    </label>
+                </li>
+            {% empty %}
+                <li>No contacts available.</li>
+            {% endfor %}
+        </ul>
+        <button type="submit">Link Selected Contacts</button>
+    </form>
+    
+
+</body>
+</html>
