@@ -38,6 +38,6 @@ class Contact(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True)  # ForeignKey to Client
 
     def __str__(self):
-        return f"{self.contact_name} ({self.email})"
+        return f"{self.contact_name} ({self.email}) the client:: {self.client} The ID {self.id}"
 
 

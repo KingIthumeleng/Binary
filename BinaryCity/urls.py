@@ -7,7 +7,7 @@ urlpatterns = [
     path('success_contact_added/', views.success_contact_added, name='success_contact_added'),
     path('success_linked/<str:client_code>/', views.success_contact_linked, name='client_link'),
     path('success_contact_linked/<str:contact_code>/', views.success_client_link, name='contact_link'),
-    path('success_ulinked/<str:contact_code>/', views.success_contact_unlinked, name='client_unlink'),
+    path('success_unlinked/<int:contact_code>/', views.success_contact_unlinked, name='client_unlink'),
     path('deleteDB/', views.deleteDB, name='content_delete'),
 
     

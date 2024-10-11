@@ -41,13 +41,15 @@ def client_page_view(request):
 
     else:
         form = ClientForm()
-        # Fetch all clients from the database
-        contacts = Contact.objects.exclude(client = 'nonfhgfh')
+        
+        contacts = Contact.objects.filter(client__isnull=False)
 
         contacts_count = len(contacts)
 
         # Create a table instance with the fetched clients
         contactTable = ContactTable(contacts)
+
+        print("The contact content: ", contacts)
 
         # Fetch all clients from the database
         clients = Client.objects.all()
@@ -97,7 +99,6 @@ def contact_page_view(request):
         contact = Contact(contact_name=contact_name, contact_surname = contact_surname, phone_number=phone_number, email=email, address=address)
         contact.save()
         return redirect('success_contact_added')
-
     else:
         form = ContactForm()  # Display an empty form
 
@@ -110,9 +111,10 @@ def contact_page_view(request):
         # Fetch all clients from the database
         contacts = Contact.objects.all()
 
-
         # Create a table instance with the modified clients data
         contactTablePage = ContactTablePage(contacts)
+
+        print("Table created", contactTablePage)
 
         return render(request, 'contacts_page.html', {'form': form, 'clientTableView': clientTable, 'contactTable': contactTablePage})  # Pass the form to the template
 
@@ -136,7 +138,7 @@ def success_contact_linked(request,client_code):
 
         return redirect('client_view')
     
-    contacts = Contact.objects.filter(client__client_code = 'NON')
+    contacts = Contact.objects.filter(client__isnull=True)
 
     return render(request, 'client_linking.html', {
         'contacts': contacts,
@@ -144,17 +146,17 @@ def success_contact_linked(request,client_code):
 
 def success_client_link(request,contact_code):
     if request.method == 'POST':
-        #selected_client = request.POST.getList('selected_contacts')
+        selected_client = request.POST.getList('selected_contacts')
         # Logic to link the selected contacts to the client
         # Assuming contact_id is provided
-        #contact = get_object_or_404(Contact, id=contact_code)
+        contact = get_object_or_404(Contact, id=contact_code)
 
         # Assuming client_code is the new value provided and exists in the Client model
-        #client = get_object_or_404(Client, client_code=selected_client)
+        client = get_object_or_404(Client, client_code=selected_client)
 
         # Update the contact's client reference
-        #contact.client = client
-        #contact.save()
+        contact.client = client
+        contact.save()
 
         return redirect('client_view')
     
@@ -178,21 +180,17 @@ def success_contact_unlinked(request, contact_code):
 
     print("unlinking contact", contact_code)
 
-    # Retrieve the contact by ID
     contact = get_object_or_404(Contact, id=contact_code)
 
-    # Retrieve the client instance using the provided client code
-    new_client = get_object_or_404(Client, client_code= 'NON')
+    print("contact ids", contact)
     
-    # Update the client code
-    contact.client = new_client
+    # # Update the client code
+    contact.client = None
     contact.save() 
 
-
+    print("contact ids after unlinking", contact)
 
     return redirect('client_view')
-    path('success_ulinked/<str:contact_code>/', views.success_contact_unlinked, name='client_unlink'),
- 
 
 def deleteDB(request):
         Contact.objects.all().delete()
