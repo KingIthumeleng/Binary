@@ -78,7 +78,7 @@
     <div style="width:700px; height: 300px;">
 
         <h3>Client(s) List</h3>
-        {% if clientTableView %}
+        {% if client_count > 0 %}
             {% load render_table from django_tables2 %}
             {% render_table clientTableView %}
         {% else %}
@@ -92,7 +92,7 @@
 
 <div id="Tab2" class="tabcontent">
     <h3>Contact(s) List</h3>
-    {% if contactTable %}
+    {% if contacts_count > 0 %}
         {% load render_table from django_tables2 %}
         {% render_table contactTable %}
     {% else %}

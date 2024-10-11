@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
 from .models import *
 from .tables import *
+from django.http import HttpResponse
+
 
 def client_page_view(request):
     form = ClientForm()
@@ -14,17 +16,21 @@ def client_page_view(request):
         
         if len(name_parts) == 1:
             # Single-word name: take the first 3 letters or pad with 'A'
-            client_code = (name[:3].upper() if len(name) >= 3 else name.upper().ljust(3, 'A'))
+            client_code_letters = (name[:3].upper() if len(name) >= 3 else name.upper().ljust(3, 'A'))
         elif len(name_parts) == 2:
             # Two-word name: take the first letter of each word and pad with 'A'
-            client_code = ''.join([word[0] for word in name_parts if word]).upper().ljust(3, 'A')
+            client_code_letters = ''.join([word[0] for word in name_parts if word]).upper().ljust(3, 'A')
         else:
             # More than two words: take the first letter of up to 3 words
-            client_code = ''.join([word[0] for word in name_parts[:3] if word]).upper()
+            client_code_letters = ''.join([word[0] for word in name_parts[:3] if word]).upper()
 
+        clients_with_code = Client.objects.filter(client_code__contains = client_code_letters)
 
+        code_index = len(clients_with_code) + 1
 
-        print("The generated client code is:", client_code)
+        code_index = str(code_index).zfill(3)
+
+        client_code = client_code_letters + str(code_index)
 
         # Save the Client object with the auto-generated client_code
         client = Client(name=name, client_code=client_code)
@@ -38,37 +44,38 @@ def client_page_view(request):
         # Fetch all clients from the database
         contacts = Contact.objects.exclude(client = 'nonfhgfh')
 
+        contacts_count = len(contacts)
+
         # Create a table instance with the fetched clients
         contactTable = ContactTable(contacts)
 
         # Fetch all clients from the database
         clients = Client.objects.all()
 
-
-        # Custom integer values corresponding to each client
-        custom_integers = [6, 5, 65, 5, 65, 32, 32, 112, 321, 254, 23, 515]
-
-        # Ensure the length of custom_integers matches the number of clients
-        if len(custom_integers) < len(clients):
-            # Extend custom_integers if it's shorter than the clients list
-            custom_integers += [0] * (len(clients) - len(custom_integers))
-
-        # Add custom integer to each client and create a new list of data
         client_data_with_int = []
-        for index, client in enumerate(clients):
-            # Adding custom integer and client data to the new list
+
+        # Loop through each client instance
+        for clientInstance in clients:
+            # Count the number of linked contacts for the current client
+            linked_contact_count = Contact.objects.filter(client=clientInstance).count()
+            
+            # Print the number of linked contacts for debugging purposes
+            print(f"Number of contacts linked to client {clientInstance.client_code}: {linked_contact_count}")
+            
+            # Append client data including contact count
             client_data_with_int.append({
-                'name': client.name,
-                'client_code': client.client_code,
-                'num_clients_int': custom_integers[index]  # Custom integer per client
+                'name': clientInstance.name,  # Assuming 'name' field exists in Client model
+                'client_code': clientInstance.client_code,
+                'num_clients_int': linked_contact_count
             })
 
-        
+
+        client_count = len(client_data_with_int)
 
         # Create a table instance with the modified clients data
         clientTable = ClientTable(client_data_with_int)
 
-        return render(request, 'clients_page.html', {'form': form, 'contactTable': contactTable, 'clientTableView': clientTable})
+        return render(request, 'clients_page.html', {'form': form, 'contactTable': contactTable, 'clientTableView': clientTable, 'client_count': client_count, 'contacts_count': contacts_count,})
 
 def contact_page_view(request):
     form = ContactForm()
@@ -78,6 +85,14 @@ def contact_page_view(request):
         phone_number = request.POST.get('phone_number')
         email = request.POST.get('email')
         address = request.POST.get('address')
+
+
+    
+        # Check if a Contact with the same email already exists
+        if Contact.objects.filter(email=email).exists() or Contact.objects.filter(phone_number=phone_number).exists():
+            # Handle the case where the email is already taken
+            return HttpResponse("A contact with this email or phone already exists.")
+        
         # Create and save the contact object
         contact = Contact(contact_name=contact_name, contact_surname = contact_surname, phone_number=phone_number, email=email, address=address)
         contact.save()
@@ -101,10 +116,8 @@ def contact_page_view(request):
 
         return render(request, 'contacts_page.html', {'form': form, 'clientTableView': clientTable, 'contactTable': contactTablePage})  # Pass the form to the template
 
-
 def success_contact_added(request):
     return render(request, 'client_succesful.html')
-
 
 def success_contact_linked(request,client_code):
     if request.method == 'POST':
@@ -128,8 +141,6 @@ def success_contact_linked(request,client_code):
     return render(request, 'client_linking.html', {
         'contacts': contacts,
     })
-
-
 
 def success_client_link(request,contact_code):
     if request.method == 'POST':
@@ -163,9 +174,6 @@ def success_client_link(request,contact_code):
         'contacts': contacts,
     })
 
-
-
-
 def success_contact_unlinked(request, contact_code):
 
     print("unlinking contact", contact_code)
@@ -183,4 +191,11 @@ def success_contact_unlinked(request, contact_code):
 
 
     return redirect('client_view')
+    path('success_ulinked/<str:contact_code>/', views.success_contact_unlinked, name='client_unlink'),
+ 
+
+def deleteDB(request):
+        Contact.objects.all().delete()
+        Client.objects.all().delete()
+        return render(request, 'deletesContent.html', {})
 

@@ -1,5 +1,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
 import re
 
 class Client(models.Model):
@@ -30,7 +35,9 @@ class Contact(models.Model):
     email = models.EmailField(unique=True)  # Email address, unique to avoid duplicates
     address = models.TextField()  # Address as a text field to accommodate longer addresses
     date_added = models.DateTimeField(auto_now_add=True)  # Timestamp for when the contact was added
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='contacts', default='NON')  # ForeignKey to Client
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True)  # ForeignKey to Client
 
     def __str__(self):
         return f"{self.contact_name} ({self.email})"
+
+
